@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+  <key>Label</key><string>com.example.automations.jobsearch</string>
+  <!-- Daily job search, 8:00: prefetch -> claude -p ranks -> record -> email the log to the
+       careers inbox. Logs: ~/automations/logs/jobsearch.log; failures email me. -->
+  <key>ProgramArguments</key><array>
+    <string>/bin/bash</string><string>/Users/you/automations/bin/run_job.sh</string><string>jobsearch</string>
+    <string>/usr/bin/python3</string><string>/Users/you/automations/jobsearch/run_jobsearch.py</string>
+  </array>
+  <key>StartCalendarInterval</key><dict><key>Hour</key><integer>8</integer><key>Minute</key><integer>0</integer></dict>
+  <key>LimitLoadToSessionType</key><array><string>Aqua</string></array>
+</dict></plist>

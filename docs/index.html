@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>claude-automations</title>
+<meta name="description" content="Three personal automations built by directing Claude Code: a morning briefing, a daily job search and a weekly fuel-price check, scheduled by macOS with Claude doing the judgment." />
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #f7f7f8; --panel: #ffffff; --text: #1a1a1f; --muted: #6b6f76; --border: #e3e4e8;
+    --accent: #2f6fed; --ok: #1a7f4e; --ok-bg: #e6f6ee; --warn: #9a6700; --warn-bg: #fff6e0;
+    --claude: #b4531b; --claude-bg: #fbeee5; --script: #6941c6; --script-bg: #f1ecfd;
+    --note-bg: #eef4ff; --note-border: #c7dafc;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #14151a; --panel: #1c1e24; --text: #eceef2; --muted: #9298a3; --border: #2b2e36;
+      --accent: #6b9bff; --ok: #4cc38a; --ok-bg: #103824; --warn: #e3b341; --warn-bg: #3a2e04;
+      --claude: #f0a070; --claude-bg: #3a2416; --script: #b8a3f5; --script-bg: #2a2140;
+      --note-bg: #17233d; --note-border: #2a3f66;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; padding: 32px 16px 64px; }
+  .wrap { max-width: 980px; margin: 0 auto; }
+  header { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 16px; flex-wrap: wrap; }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  header p { margin: 0; color: var(--muted); font-size: 14px; max-width: 64ch; line-height: 1.5; }
+  .badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 999px; font-size: 13px;
+    font-weight: 600; border: 1px solid var(--border); background: var(--panel); white-space: nowrap; }
+  .badge .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--ok); }
+  a { color: var(--accent); }
+  .note { background: var(--note-bg); border: 1px solid var(--note-border); border-radius: 10px; padding: 12px 16px;
+    font-size: 13.5px; line-height: 1.55; margin-bottom: 24px; }
+  h2.section { font-size: 15px; margin: 28px 0 10px; }
+  .lead { color: var(--muted); font-size: 13.5px; line-height: 1.55; margin: -4px 0 12px; max-width: 74ch; }
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; }
+  .card { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; font-size: 13px; line-height: 1.5; }
+  .card .when { color: var(--accent); font-weight: 700; font-size: 11px; letter-spacing: .05em; text-transform: uppercase; }
+  .card .name { font-weight: 650; font-size: 15px; margin: 2px 0 6px; }
+  .card ul { margin: 0; padding-left: 18px; }
+  .card li { margin: 3px 0; }
+  .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+  .flow { display: flex; flex-wrap: wrap; align-items: stretch; gap: 8px; padding: 16px; }
+  .step { flex: 1 1 140px; border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; font-size: 12.5px; line-height: 1.45; background: var(--bg); }
+  .step b { display: block; font-size: 13px; margin-bottom: 2px; }
+  .step.claude { border-color: var(--claude); background: var(--claude-bg); }
+  .arrow { align-self: center; color: var(--muted); font-size: 18px; }
+  .table-scroll { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { text-align: left; padding: 9px 14px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 11.5px; text-transform: uppercase; letter-spacing: .04em; white-space: nowrap; }
+  tbody tr:last-child td { border-bottom: none; }
+  td.time { white-space: nowrap; font-variant-numeric: tabular-nums; color: var(--muted); }
+  .pill { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 11.5px; font-weight: 600; white-space: nowrap; }
+  .pill.script { color: var(--script); background: var(--script-bg); }
+  .pill.claude { color: var(--claude); background: var(--claude-bg); }
+  .pill.ok { color: var(--ok); background: var(--ok-bg); }
+  .legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12px; color: var(--muted); padding: 10px 16px 14px; }
+  ol.list { margin: 0; padding: 14px 16px 14px 36px; font-size: 13.5px; line-height: 1.6; }
+  ol.list li { margin: 0 0 8px; }
+  ol.list li:last-child { margin-bottom: 0; }
+  code { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: .92em; background: var(--bg); padding: 1px 5px; border-radius: 4px; }
+  footer { margin-top: 32px; font-size: 13px; color: var(--muted); line-height: 1.6; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>claude-automations</h1>
+      <p>Three personal automations that run on my Mac every day. I built them by directing Claude Code; macOS schedules them, plain scripts do everything that must be exact, and Claude makes the calls that need judgment.</p>
+    </div>
+    <span class="badge"><span class="dot"></span>Running daily · Claude + macOS</span>
+  </header>
+
+  <div class="note">
+    <strong>This page describes a working setup; it isn't the setup itself.</strong> The jobs run on my Mac. Write-up and sanitized example scripts:
+    <a href="https://github.com/deuber/claude-automations">github.com/deuber/claude-automations</a>.
+  </div>
+
+  <h2 class="section">Three automations</h2>
+  <p class="lead">Each one ends in a styled email. If anything fails, I get an alert with the end of the log instead of silence.</p>
+  <div class="cards">
+    <div class="card">
+      <div class="when">Daily · 7:58 AM</div>
+      <div class="name">Morning briefing</div>
+      <ul>
+        <li>Weather, alerts and a 3-day forecast from the National Weather Service</li>
+        <li>Sunrise, sunset and first/last light, calculated, so I'm not caught out after dark</li>
+        <li>Today's and tomorrow's calendar, read-only</li>
+        <li><strong>No AI.</strong> Nothing here needs judgment, so nothing can be rate-limited or invent an event</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="when">Daily · 8:00 AM</div>
+      <div class="name">Job search</div>
+      <ul>
+        <li>A script sweeps ~280 company job boards through their public APIs</li>
+        <li>Filters title, location, required travel and age; dedupes against roles already seen and applied to</li>
+        <li><strong>Claude</strong> reads my profile and the shortlist and decides keep or skip, with a reason</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="when">Mondays · 8:15 AM</div>
+      <div class="name">Fuel prices</div>
+      <ul>
+        <li><strong>Claude</strong> fetches three stations' prices (the source blocks plain scripts)</li>
+        <li>The script validates them, keeps a history and flags anomalies</li>
+        <li>Savings per fill for two vehicles, and whether the detour is worth the drive</li>
+      </ul>
+    </div>
+  </div>
+
+  <h2 class="section">How it fits together</h2>
+  <p class="lead">One pattern for every job. Claude is a single, narrow step with a strict contract, not the thing in charge.</p>
+  <div class="panel">
+    <div class="flow">
+      <div class="step"><b>macOS launchd</b>Runs the job on schedule; a job missed while the Mac sleeps runs on wake</div>
+      <div class="arrow">→</div>
+      <div class="step"><b>run_job.sh</b>Logs every run; emails me an alert on any failure</div>
+      <div class="arrow">→</div>
+      <div class="step"><b>Python script</b>Fetches, filters and validates; writes a fallback result first</div>
+      <div class="arrow">→</div>
+      <div class="step claude"><b>claude -p</b>Judgment only. Answers in fixed JSON; no tools, or only web fetch</div>
+      <div class="arrow">→</div>
+      <div class="step"><b>send_email.py</b>Styled HTML email; password read from macOS Keychain</div>
+    </div>
+  </div>
+
+  <h2 class="section">A Monday morning, step by step</h2>
+  <div class="panel">
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>Time</th><th>Job</th><th>Step</th><th>Done by</th><th>Result</th></tr></thead>
+        <tbody>
+          <tr><td class="time">7:58</td><td>Morning briefing</td><td>Weather, sun times and calendar → email</td><td><span class="pill script">Script</span></td><td><span class="pill ok">~7 s</span></td></tr>
+          <tr><td class="time">8:00</td><td>Job search</td><td>Sweep ~280 boards, ~17,000 postings → filtered shortlist; write a fallback log</td><td><span class="pill script">Script</span></td><td><span class="pill ok">~30 s</span></td></tr>
+          <tr><td class="time">8:00</td><td>Job search</td><td>Keep or skip each candidate against my profile, with a reason</td><td><span class="pill claude">Claude</span></td><td><span class="pill ok">JSON checked</span></td></tr>
+          <tr><td class="time">8:01</td><td>Job search</td><td>Record the ranked log → email</td><td><span class="pill script">Script</span></td><td><span class="pill ok">~45 s total</span></td></tr>
+          <tr><td class="time">8:15</td><td>Fuel prices</td><td>Fetch three stations' prices</td><td><span class="pill claude">Claude</span></td><td><span class="pill ok">validated</span></td></tr>
+          <tr><td class="time">8:15</td><td>Fuel prices</td><td>History, anomaly flags, savings per fill → email</td><td><span class="pill script">Script</span></td><td><span class="pill ok">~20 s total</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="legend"><span><span class="pill script">Script</span> steps that must always happen</span><span><span class="pill claude">Claude</span> steps that need judgment</span></div>
+  </div>
+
+  <h2 class="section">Design choices</h2>
+  <div class="panel">
+    <ol class="list">
+      <li><strong>Use AI only where it adds judgment.</strong> The briefing is pure code. Weather, sun times and calendar formatting don't need a model.</li>
+      <li><strong>Give the model a narrow job and a strict contract.</strong> Claude returns <code>{"decisions": [{"url", "decision", "note"}]}</code> for every candidate. Anything it misses stays in the log, marked unranked.</li>
+      <li><strong>Validate before acting.</strong> Fuel prices must be present and within a plausible range before anything is written or emailed.</li>
+      <li><strong>Always leave a result.</strong> The job search writes an unranked log before Claude runs and emails it even if the ranking fails.</li>
+      <li><strong>Fail loudly, to me only.</strong> One wrapper logs every run and emails an alert on any failure.</li>
+      <li><strong>Test through the real path.</strong> macOS grants calendar access per launching app, so every job was tested with a one-time scheduled run, not just from the terminal.</li>
+    </ol>
+  </div>
+
+  <h2 class="section">Bugs caught by testing</h2>
+  <p class="lead">Every calculation and filter was checked against cases where I already knew the right answer. These are the ones that would otherwise have shipped.</p>
+  <div class="panel">
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>Bug</th><th>How it was caught</th></tr></thead>
+        <tbody>
+          <tr><td>Calendar showed "No events" on a day with an event</td><td>Compared the scheduled run to the real calendar; the calendar tool's separator option takes a delimiter first</td></tr>
+          <tr><td>A failed job would not have sent its alert</td><td>A deliberate failing test job: <code>exit</code> inside a <code>{ }</code> block ended the whole script</td></tr>
+          <tr><td>A silent calendar failure would read as "No events"</td><td>A known-answer test with a tool that fails without output</td></tr>
+          <tr><td>Sun times off by an hour on daylight-saving days</td><td>Every day of two years checked against an independent astronomy library</td></tr>
+          <tr><td>A travel filter skipping "travel booking systems" roles</td><td>Known-answer sentences, then a scan of 352 real postings</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <h2 class="section">How I worked with Claude Code</h2>
+  <div class="panel">
+    <ol class="list">
+      <li><strong>Diagnose before fixing.</strong> Root causes with evidence (logs, transcripts, macOS permission logs) before any change.</li>
+      <li><strong>Known-answer tests.</strong> Rounding to the cent, daylight-saving days, filter edge cases.</li>
+      <li><strong>Small, reviewable changes,</strong> tested on copies first, with real emails only to me.</li>
+      <li><strong>Verify the outcome, not the report.</strong> The inbox and the logs, not "succeeded".</li>
+      <li><strong>Choose reliability over novelty.</strong> An earlier version ran on a self-hosted agent with free models; when two of those models were discontinued within two weeks, I moved the judgment steps to Claude and the scheduling to macOS.</li>
+    </ol>
+  </div>
+
+  <footer>
+    Built by David Deuber, Nov 2026. Write-up and sanitized example scripts:
+    <a href="https://github.com/deuber/claude-automations">github.com/deuber/claude-automations</a>
+  </footer>
+</div>
+</body>
+</html>

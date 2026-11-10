@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+  <key>Label</key><string>com.example.automations.briefing</string>
+  <!-- Morning briefing, daily 7:58. Runs through osascript so macOS uses osascript's
+       Calendar permission. run_job.sh logs to ~/automations/logs/briefing.log and
+       emails me if it fails. If the Mac is asleep at 7:58, it runs on wake. -->
+  <key>ProgramArguments</key><array>
+    <string>/usr/bin/osascript</string><string>-l</string><string>JavaScript</string><string>-e</string>
+    <string>ObjC.import("stdlib"); const s=$.system("/bin/bash /Users/you/automations/bin/run_job.sh briefing /usr/bin/python3 /Users/you/automations/briefing/run_briefing.py"); $.exit((s &gt;&gt; 8) &amp; 255);</string>
+  </array>
+  <key>StartCalendarInterval</key><dict><key>Hour</key><integer>7</integer><key>Minute</key><integer>58</integer></dict>
+  <key>LimitLoadToSessionType</key><array><string>Aqua</string></array>
+</dict></plist>
